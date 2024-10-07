@@ -43,15 +43,17 @@ class Point:
         self.XY_next[0] = xy_parameter[0]
         self.XY_next[1] = xy_parameter[1]        
     
-    def update_point(self):
+    def update_point(self) -> None:
         """Current point is updated based on calculated point."""
         self.xy_current[0] = self.XY_next[0]
         self.xy_current[1] = self.XY_next[1]
+        return None
     
-    def copy_point(self):
+    def copy_point(self) -> None:
         """Copy current point to new point for calculation purpose."""
         self.XY_next[0] = self.xy_current[0]
         self.XY_next[1] = self.xy_current[1]
+        return None
         
 class GravitationalForce:
     """For gravity force vector calculation."""
@@ -72,7 +74,8 @@ class GravitationalForce:
                     vector[0] = obj.xy_current[0] - self.xy_current[0]
                     vector[1] = obj.xy_current[1] - self.xy_current[1]
 
-                    # Gravitational force formula
+                    # Pseudo gravitational force formula with  d instead of d^2
+                    # for visual exaggeration
                     force = self.mass * obj.mass / dist(self.xy_current, 
                         obj.xy_current)
                     self.xyGForce[0] += vector[0] * force
@@ -99,7 +102,8 @@ class ElectricForce:
                     vector[0] = self.xy_current[0] - obj.xy_current[0]
                     vector[1] = self.xy_current[1] - obj.xy_current[1]
 
-                    # Electric force formula
+                    # Pseudo electric force formula with d instead of d^2
+                    # for visual exaggeration
                     force = self.charge * obj.charge / dist(self.xy_current, 
                         obj.xy_current)
                     self.xyEForce[0] += vector[0] * force
@@ -176,13 +180,13 @@ class Boundary:
         """Boundary does not move.
 
         Returns nothing for compatability in onStep()."""
-        return
+        return None
     
     def update(self, objects: list) -> None:
         """Boundary does not move.
 
         Returns nothing for compatability in onStep()."""
-        return   
+        return None
 
 class PhysicalProperty:
     """Defines physical characteristics of object."""
@@ -246,7 +250,7 @@ class Ball(TimeStamp, Point, PhysicalObject):
             radius, fill = self.chargeColor)
         self.weight = mass
         
-    def movement(self, objects: list):
+    def movement(self, objects: list) -> None:
         """Calculate ball velocity based on gravity & electric force."""
         t = self.time_lapse()
 
@@ -266,15 +270,17 @@ class Ball(TimeStamp, Point, PhysicalObject):
         tYAcc = tYForce / self.mass
         
         # Calculate next position
-        # Formula: v = dA/dt
+        # Formula: A = dv/dt
         self.velocity1[0] = self.velocity0[0] + tXAcc * t
         self.velocity1[1] = self.velocity0[1] + tYAcc * t
 
-        # Formula: x = dV/dt
+        # Formula: v = dx/dt
         self.XY_next[0] = self.xy_current[0] + self.velocity1[0] * t
         self.XY_next[1] = self.xy_current[1] + self.velocity1[1] * t
+
+        return None
         
-    def update(self, objects: list):
+    def update(self, objects: list) -> None:
         """Updating ball position based on nearby forces 
 
         Or object collisions."""
@@ -285,8 +291,9 @@ class Ball(TimeStamp, Point, PhysicalObject):
         self.kinetic_status_update()
         self.circle.centerX = self.xy_current[0]
         self.circle.centerY = self.xy_current[1]
+        return None
 
-    def check_collision(self, objects: list, radius = 1):
+    def check_collision(self, objects: list, radius = 1) -> None:
         for obj in objects:
             # Check ball and satellites
             if obj.name == 'Ball' or obj.name == 'Satellite':
@@ -325,6 +332,7 @@ class Ball(TimeStamp, Point, PhysicalObject):
                 self.XY_next[1] = xyUpdate[1]
                 self.velocity1[0] = velocityUpdate[0]
                 self.velocity1[1] = velocityUpdate[1]
+        return None
     
 class Satellite(TimeStamp, Point, OrbitalEngine, PhysicalObject):
     """For moving satellites in ring."""
@@ -346,7 +354,7 @@ class Satellite(TimeStamp, Point, OrbitalEngine, PhysicalObject):
         self.xy_current[0] = tX
         self.xy_current[1] = tY
         
-    def movement(self, objects: "Satellite"):
+    def movement(self, objects: "Satellite") -> None:
         """Circular satellite movement."""
         t = self.time_lapse()
 
@@ -359,12 +367,14 @@ class Satellite(TimeStamp, Point, OrbitalEngine, PhysicalObject):
             * math.cos(self.angle)
         self.XY_next[1] = app.centerPlayground[1] + self.orbitRadius \
             * math.sin(self.angle)
+        return None
         
-    def update(self, objects: list):
+    def update(self, objects: list) -> None:
         """Updating satellite position to update nearby vector field points."""
         self.update_point()
         self.circle.centerX = self.xy_current[0]
         self.circle.centerY = self.xy_current[1] 
+        return None
         
 class PointForceField(Point, GravitationalForce, ElectricForce):
     """For creating and updating field vectors.
@@ -386,12 +396,13 @@ class PointForceField(Point, GravitationalForce, ElectricForce):
         self.line_t = Line(xy_current[0], xy_current[1], xy_current[0], 
             xy_current[1], fill='black')
 
-    def movement(self, objects: list):
+    def movement(self, objects: list) -> None:
         """Collects sum of forces from objects."""
         self.g_force(objects)
         self.e_force(objects)
+        return None
         
-    def update(self, objects: list):
+    def update(self, objects: list) -> None:
         """Collecting calculated force vectors & updating field vectors."""
         self.line_g.x2 = self.xyGForce[0] + self.xy_current[0]
         self.line_g.y2 = self.xyGForce[1] + self.xy_current[1]
@@ -401,6 +412,7 @@ class PointForceField(Point, GravitationalForce, ElectricForce):
             self.xy_current[0]
         self.line_t.y2 = self.xyGForce[1] + self.xyEForce[1] + \
             self.xy_current[1]
+        return None
 
 def mouse_click_range_check(xy_current: float, xy1: float, xy2: float) -> bool:
     """A function that checks if a mouse click xy is inside a box defined 
@@ -436,17 +448,19 @@ class menuItem:
         else:
             self.deselected()
 
-    def selected(self):
+    def selected(self) -> None:
         """Highlight selection."""
         self.Button.fill = 'black'
         self.String.fill = 'white'
+        return None
 
-    def deselected(self):
+    def deselected(self) -> None:
         """Remove highlighted selection."""
         self.Button.fill = 'white'
         self.String.fill = 'black'
+        return None
 
-def onMousePress(mouseX: float, mouseY: float):
+def onMousePress(mouseX: float, mouseY: float) -> None:
     clickedXY = [mouseX, mouseY]
 
     # Check if playground was clicked
@@ -597,9 +611,10 @@ def onMousePress(mouseX: float, mouseY: float):
                 # Change mass of all satellites
                 for object in app.objs:
                     if object.name == 'Ball':
-                        object.charge *= ratio    
+                        object.charge *= ratio
+    return None
 
-def menu_setup():
+def menu_setup() -> None:
     """Creates menu selection items."""
 
     app.menuObjectTypeList = ['Satellite', 'Ball']
@@ -704,15 +719,17 @@ def menu_setup():
         app.menuList.append( menuItem( menuString, app.menuBallCharge[i],  
             [app.widthPlayground + 10 + 100 *i, 640], app.menuButtonSize, 
             selected) )
+    return None
 
 # Frame update
-def onStep():
+def onStep() -> None:
     for object in app.objs:
         object.movement(app.objs)
         object.update(app.objs)
+    return None
 
 # Set up screen
-def setup():
+def setup() -> None:
     # Global setup
     xCanvas = 1024
     yCanvas = 720
@@ -776,6 +793,7 @@ def setup():
     app.objs.append(Ball([app.widthPlayground/2, 
         app.heightPlayground/2 - 150], app.radiusBall, app.massBall, 
         -app.chargeBall))
+    return None
 
 setup()
 cmu_graphics.run()

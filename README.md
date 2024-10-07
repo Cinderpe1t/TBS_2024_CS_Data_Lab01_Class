@@ -1,6 +1,8 @@
 # 2024 CS Algorithm and Data Structure Lab #1 - Class
 First lab for CS Algorithm and Data Structure course. Practice class, inheritance, and object-oriented programming.
 ## Python code
+- Need cmu_graphics from https://academy.cs.cmu.edu/desktop
+- Electric and gravitational forces use 1/distance in place of 1/distance^2 to exaggerate visual effects
 `python3 lab01_final.py`
 ## Interface and screenshot
 - Satellites always orbit circularly. They have exaggerated gravitational force and electric force when charged. Their orbits are not affected by any force. When added by clicking, the new satellite will orbit cicularly around the center of the box. 
